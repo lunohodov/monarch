@@ -1,0 +1,10 @@
+class CreateDataMigrationRecords < ActiveRecord::Migration<%= migration_version %>
+  def change
+    create_table :<%= migration_table_name %> do |t|
+      t.string :version, null: false
+      t.timestamps
+    end
+
+    add_index :<%= migration_table_name %>, :version, unique: true
+  end
+end
