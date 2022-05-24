@@ -1,0 +1,1 @@
+MonarchMigrate::MigrationTest::BadMigration.migrate!
