@@ -20,13 +20,13 @@ Gem::Specification.new do |spec|
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   end
 
+  spec.add_dependency("activerecord")
+  spec.add_dependency("railties")
+
   spec.add_development_dependency("appraisal")
   spec.add_development_dependency("minitest")
   spec.add_development_dependency("mocha")
-  spec.add_development_dependency("rails", "> 5.2.3")
   spec.add_development_dependency("rake")
   spec.add_development_dependency("sqlite3")
   spec.add_development_dependency("standard")
-
-  spec.add_runtime_dependency("rails", "> 5.2.3")
 end

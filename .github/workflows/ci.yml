@@ -1,31 +1,44 @@
-name: CI
+name: "CI Tests"
+
 on:
-  - push
-  - pull_request
+  push:
+    branches: "main"
+    pull_request:
+      branches: "*"
 
 jobs:
-  build:
-    name: Ruby ${{ matrix.ruby }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby:
-          - "3.1"
-          - "3.0"
-          - "2.7.3"
+  test:
+    name: "Ruby ${{ matrix.ruby }}, Rails ${{ matrix.gemfile }}"
 
     runs-on: 'ubuntu-latest'
 
+    strategy:
+      fail-fast: false
+      matrix:
+        gemfile:
+          - "5.2"
+          - "6.0"
+          - "7.0"
+        ruby:
+          - "2.7.2"
+          - "3.0.0"
+          - "3.1.0"
+
     env:
-      RUBYOPT: "--disable-error_highlight"
+      BUNDLE_GEMFILE: gemfiles/rails_${{ matrix.gemfile }}.gemfile
+      RAILS_ENV: test
 
     steps:
       - uses: actions/checkout@v2
-      - uses: ruby/setup-ruby@v1
+
+      - name: "Install Ruby ${{ matrix.ruby  }}"
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-      - name: Setup project
-        run: bin/setup
-      - name: Run test
+          bundler-cache: true
+
+      - name: "Reset app database"
+        run: bundle exec rake fake:db:reset
+
+      - name: "Run test"
         run: bundle exec rake
