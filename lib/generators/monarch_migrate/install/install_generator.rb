@@ -34,7 +34,7 @@ module MonarchMigrate
       private
 
       def migration_table_exists?
-        ActiveRecord::Base.connection.data_source_exists?(MonarchMigrate.data_migrations_table_name)
+        ActiveRecord::Base.connection.data_source_exists?(migration_table_name)
       end
 
       def migration_exists?
