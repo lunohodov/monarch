@@ -7,10 +7,10 @@
   </a>
 </blockquote>
 
-Schema modification is the main idea behind Rails' migration mechanism. Using migrations
-for changing data in the database comes second.
+The main motivation behind Rails' migration mechanism is schema modification. Using it
+for data changes in the database comes second.
 
-Yet, using regular migrations to add or modify data can be problematic.
+Yet, adding of modifying data via regular migrations can be problematic.
 
 The first issue is that application deployment now depends on the data migration
 to be completed. This may not be a problem with small databases but large
@@ -18,15 +18,15 @@ databases with millions of records will respond with hanging or failed migration
 
 Another issue is that data migration files usually stay in `db/migrate` for posterity.
 As a result, they will run whenever a developer sets up their local development environment.
-For a pristine database, this is unnecessary. Especially when there are [scripts][2] to
+This is unnecessary for a pristine database. Especially so when there are [scripts][2] to
 seed the correct data.
 
-In addition, using `ActiveRecord` models in migrations can [complicate things further](#using-activerecord-models-in-migrations).
+In addition, using ActiveRecord models in migrations has its [quirks](#using-activerecord-models-in-migrations).
 
 The purpose of `monarch_migrate` is to solve the above issues with separating data
 from schema migrations. It assumes that:
 
-- You run data migrations *only* on production and use [scripts][2] i.e. `dev:prime` for local development.
+- You run data migrations *only* on production and rely on seed [scripts][2] i.e. `dev:prime` for local development.
 - You run data migrations manually.
 
 ## Install
@@ -45,14 +45,14 @@ After you install MonarchMigrate, you need to run the generator:
 rails generate monarch_migrate:install
 ```
 
-The above will generate a schema migration that creates a table to keep track
-of ran data migrations.
+The above generates a schema migration which adds a table called `data_migration_records`.
+It will store previously run data migrations.
 
 
 ## Usage
 
-Data migrations in MonarchMigrate follow a similar structure to regular migrations
-in Rails. Migration files are put into `db/data_migrate`.
+Data migrations in MonarchMigrate have a similar structure to regular migrations
+in Rails. Files are put into `db/data_migrate` and follow the same naming pattern.
 
 To create a new data migration, run:
 
@@ -60,8 +60,7 @@ To create a new data migration, run:
 rails generate monarch_migrate:data_migration downcase_usernames
 ```
 
-In contrast to regular migrations, however, you don't need to inherit any
-classes in the file:
+In contrast to regular migrations, there is no need to inherit any classes:
 
 ```ruby
 # db/data_migrate/200107010930_downcase_usernames.rb
@@ -73,7 +72,8 @@ SearchIndex.rebuild
 ```
 
 As seen above, it is plain ruby code where you can refer to any object you
-need. In addition, each migration runs in a separate transaction.
+need. MonarchMigrate will run each migration in a separate transaction.
+
 
 To run all pending data migrations:
 
@@ -89,6 +89,9 @@ rails db:data:migrate VERSION=200107010930
 
 ## Known Issues and Limitations
 
+These are not necessary inherent to MonarchMigrate. Some are innate to migrations
+in general.
+
 ### Using ActiveRecord Models in Migrations
 
 <blockquote>
@@ -98,20 +101,19 @@ rails db:data:migrate VERSION=200107010930
   </a>
 </blockquote>
 
-In general, data migrations relate closely to business models. In an ideal Rails world,
+Typically, data migrations relate closely to business models. In an ideal Rails world,
 data manipulations would depend on model logic to enforce validation, conform to
-business rules, etc. Naturally, we might use `ActiveRecord` models in migrations.
+business rules, etc. Hence, we may use ActiveRecord models in migrations.
 
-Lets imagine we have designed our users to have first and last names. Time passes and
-we realise this is [wrong][3]. Now, we want to put things right.
-
-Here's the plan:
+Suppose we have designed a system where users have first and last names. Time passes and
+it becomes clear this is [wrong][3]. Now, we want to put things right and come
+up with the following plan:
 
 1. Add a `name` column to `users` table to hold the entire name of a person.
 2. Change the `User` model and use a data migration to update existing records.
 3. Drop `first_name` and `last_name` columns.
 
-And here is what our data migration looks like:
+The data migration looks something like:
 
 ```ruby
 # db/migrate/some_migration.rb
@@ -130,8 +132,28 @@ The code above is problematic because:
 - It does not check if the user has already been migrated.
 - It will fail when a future developer runs the migration during local development setup after `first_name` and `last_name` columns are gone.
 
-Keep the above in mind when referencing `ActiveRecord` models in data migrations. Ideally,
-limit the use of models and do as much processing as possible in Postgres.
+Keep the above in mind when referencing ActiveRecord models in data migrations. Ideally,
+limit their use and do as much processing as possible in Postgres.
+
+
+### Long-running Tasks in Migrations
+
+As mentioned above, MonarchMigrate (as also Rails) runs each migration in a separate
+transaction. A long-running task within a migration will keep the transaction open for
+the duration of the task. As a result, the migration may hang or fail.
+
+To avoid the issue, we can run these tasks asynchronously.
+
+Back to our previous example:
+
+```ruby
+# db/data_migrate/200107010930_downcase_usernames.rb
+ActiveRecord::Base.connection.execute(<<-SQL)
+  UPDATE users SET username = lower(username);
+SQL
+
+SearchIndex::RebuildJob.perform_later
+```
 
 
 ## Trivia
