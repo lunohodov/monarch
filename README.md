@@ -146,8 +146,7 @@ end
 Unfortunately, with regular Rails migrations we will still face issue 4.
 
 To avoid it, we need to separate data from schema migrations and not run data
-migrations locally. Data in local databases is managed by seed scripts, which
-always seed the correct data.
+migrations locally. With seed [scripts][2], there is no need to run them.
 
 Keep the above in mind when referencing ActiveRecord models in data migrations. Ideally,
 limit their use and do as much processing as possible in Postgres.
