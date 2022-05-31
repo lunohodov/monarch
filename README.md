@@ -113,7 +113,7 @@ up with the following plan:
 2. Change the `User` model and use a data migration to update existing records.
 3. Drop `first_name` and `last_name` columns.
 
-A regular Rails migration may look something like this:
+A regular Rails migration to update existing records may look something like this:
 
 ```ruby
 # db/migrate/200107010930_backfill_users_name.rb
