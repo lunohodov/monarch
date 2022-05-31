@@ -113,10 +113,10 @@ up with the following plan:
 2. Change the `User` model and use a data migration to update existing records.
 3. Drop `first_name` and `last_name` columns.
 
-The data migration looks something like:
+A regular Rails migration may look something like this:
 
 ```ruby
-# db/migrate/some_migration.rb
+# db/migrate/200107010930_backfill_users_name.rb
 def up
   User.all.each do |user|
     user.name = "#{user.first_name} #{user.last_name}"
@@ -127,10 +127,27 @@ end
 
 The code above is problematic because:
 
-- It iterates through every user.
-- It invokes validations and callbacks, which may have unintended consequences.
-- It does not check if the user has already been migrated.
-- It will fail when a future developer runs the migration during local development setup after `first_name` and `last_name` columns are gone.
+1. It iterates through every user.
+2. It invokes validations and callbacks, which may have unintended consequences.
+3. It does not check if the user has already been migrated.
+4. It will fail when a future developer runs the migration during local development setup after `first_name` and `last_name` columns are gone.
+
+To avoid issues 1-3, we can rewrite the migration to:
+
+```ruby
+# db/migrate/200107010930_backfill_users_name.rb
+def up
+  User.where(name: nil).find_each do |user|
+    user.update_column(:name, "#{user.first_name} #{user.last_name}")
+  end
+end
+```
+
+Unfortunately, with regular Rails migrations we will still face issue 4.
+
+To avoid it, we need to separate data from schema migrations and not run data
+migrations locally. Data in local databases is managed by seed scripts, which
+always seed the correct data.
 
 Keep the above in mind when referencing ActiveRecord models in data migrations. Ideally,
 limit their use and do as much processing as possible in Postgres.
