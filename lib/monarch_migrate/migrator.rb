@@ -1,22 +1,18 @@
 # frozen_string_literal: true
 
-require "logger"
-
 module MonarchMigrate
   class Migrator
     attr_reader :path
     attr_reader :version
-    attr_reader :logger
 
-    def initialize(path, version: nil, logger: nil)
+    def initialize(path, version: nil)
       @path = path.to_s
-      @logger = logger || Logger.new($stderr)
       @version = version
     end
 
     def migrations
       migration_files.sort.map do |f|
-        Migration.new(f, logger: logger)
+        Migration.new(f)
       end
     end
 
@@ -24,12 +20,12 @@ module MonarchMigrate
       migrations.select(&:pending?)
     end
 
-    def run
+    def run(io = $stdout)
       if pending_migrations.any?
-        logger.info "Running #{pending_migrations.size} data migrations"
-        pending_migrations.sort_by(&:version).each(&:run)
+        io.puts "Running #{pending_migrations.size} data migrations"
+        pending_migrations.sort_by(&:version).each { |m| m.run(io) }
       else
-        logger.info "No data migrations pending"
+        io.puts "No data migrations pending"
       end
     end
 

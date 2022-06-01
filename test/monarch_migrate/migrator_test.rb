@@ -2,6 +2,8 @@ require "test_helper"
 
 module MonarchMigrate
   class MigratorTest < Minitest::Test
+    include Testing::Stream
+
     def setup
       super
       @migrator = create_migrator
@@ -30,7 +32,7 @@ module MonarchMigrate
 
       refute_migration_did_run("200010101011")
 
-      @migrator.run
+      capture(:stdout) { @migrator.run }
 
       assert_migration_did_run("200010101011")
     end
@@ -38,7 +40,7 @@ module MonarchMigrate
     def test_runs_only_the_specified_migration
       migrator = create_migrator(version: "200010101011")
 
-      migrator.run
+      capture(:stdout) { migrator.run }
 
       refute_migration_did_run("200010101010")
       assert_migration_did_run("200010101011")
@@ -55,8 +57,7 @@ module MonarchMigrate
     def create_migrator(version: nil)
       Migrator.new(
         File.expand_path("../fixtures/db/data_migrate", __dir__),
-        version: version,
-        logger: stub_everything("logger", info: nil)
+        version: version
       )
     end
   end

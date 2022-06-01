@@ -14,6 +14,27 @@ require "rails/test_help"
 require "monarch_migrate"
 
 module MonarchMigrate
+  module Testing
+    module Stream
+      def capture(stream)
+        stream = stream.to_s
+        captured_stream = Tempfile.new(stream)
+        stream_io = instance_eval("$#{stream}", __FILE__, __LINE__)
+        origin_stream = stream_io.dup
+        stream_io.reopen(captured_stream)
+
+        yield
+
+        stream_io.rewind
+        captured_stream.read
+      ensure
+        captured_stream.close
+        captured_stream.unlink
+        stream_io.reopen(origin_stream)
+      end
+    end
+  end
+
   module Generators
     module Testing
       def self.included(other)

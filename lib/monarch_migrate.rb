@@ -11,11 +11,7 @@ module MonarchMigrate
   end
 
   def self.migrator
-    Migrator.new(
-      data_migrations_path,
-      version: ENV.fetch("VERSION", nil),
-      logger: Rails.logger
-    )
+    Migrator.new(data_migrations_path, version: ENV.fetch("VERSION", nil))
   end
 end
 

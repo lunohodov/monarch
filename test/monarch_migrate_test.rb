@@ -17,7 +17,6 @@ class MonarchMigrateTest < Minitest::Test
     migrator = MonarchMigrate.migrator
 
     assert_equal MonarchMigrate.data_migrations_path, migrator.path
-    assert_equal Rails.logger, migrator.logger
   end
 
   def test_migrator_with_specified_migration_version
