@@ -29,6 +29,22 @@ module MonarchMigrate
       end
     end
 
+    def migrations_status
+      db_list = MigrationRecord.normalized_versions
+
+      file_list = migrations.filter_map do |migration|
+        version = migration.version
+        status = db_list.delete(version) ? "up" : "down"
+        [status, version, migration.name]
+      end
+
+      db_list.map! do |version|
+        ["up", version, "***** NO FILE *****"]
+      end
+
+      (db_list + file_list).sort_by { |_, version, _| version.to_i }
+    end
+
     private
 
     def migration_files

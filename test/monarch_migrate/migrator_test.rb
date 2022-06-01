@@ -46,6 +46,25 @@ module MonarchMigrate
       assert_migration_did_run("200010101011")
     end
 
+    def test_migrations_status_is_empty_without_any_migrations
+      status = Dir.mktmpdir do |dir|
+        create_migrator(dir).migrations_status
+      end
+
+      assert_empty status
+    end
+
+    def test_migrations_status
+      MigrationRecord.create!(version: "200010101000")
+
+      status = @migrator.migrations_status
+
+      assert_equal 3, status.size
+      assert_equal status[0], ["up", "200010101000", "***** NO FILE *****"]
+      assert_equal status[1], ["down", "200010101010", "Bad migration"]
+      assert_equal status[2], ["down", "200010101011", "Good migration"]
+    end
+
     def refute_migration_did_run(version)
       refute MigrationRecord.exists?(version: version)
     end
@@ -54,11 +73,10 @@ module MonarchMigrate
       assert MigrationRecord.exists?(version: version)
     end
 
-    def create_migrator(version: nil)
-      Migrator.new(
-        File.expand_path("../fixtures/db/data_migrate", __dir__),
-        version: version
-      )
+    def create_migrator(path = nil, version: nil)
+      path ||= File.expand_path("../fixtures/db/data_migrate", __dir__)
+
+      Migrator.new(path, version: version)
     end
   end
 end

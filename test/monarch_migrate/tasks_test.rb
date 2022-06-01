@@ -8,4 +8,10 @@ class TasksTest < Minitest::Test
 
     assert_match(/No data migrations pending/, out)
   end
+
+  def test_migrate_status
+    out = capture(:stdout) { Rake::Task["db:data:migrate:status"].execute }
+
+    assert_match(/Status\s*Data Migration ID\s*Data Migration Name/, out)
+  end
 end
