@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    monarch_migrate (0.1.0)
+    monarch_migrate (0.3.0)
       activerecord
       railties
 
