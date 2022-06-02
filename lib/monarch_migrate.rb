@@ -11,16 +11,12 @@ module MonarchMigrate
   end
 
   def self.migrator
-    Migrator.new(
-      data_migrations_path,
-      version: ENV.fetch("VERSION", nil),
-      logger: Rails.logger
-    )
+    Migrator.new(data_migrations_path, version: ENV.fetch("VERSION", nil))
   end
 end
 
 require "monarch_migrate/migration"
 require "monarch_migrate/migration_record"
 require "monarch_migrate/migrator"
-require "monarch_migrate/version"
 require "monarch_migrate/railtie"
+require "monarch_migrate/version"

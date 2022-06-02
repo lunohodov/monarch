@@ -17,14 +17,13 @@ class MonarchMigrateTest < Minitest::Test
     migrator = MonarchMigrate.migrator
 
     assert_equal MonarchMigrate.data_migrations_path, migrator.path
-    assert_equal Rails.logger, migrator.logger
   end
 
   def test_migrator_with_specified_migration_version
-    ENV.expects(:fetch).with("VERSION", nil).returns("abc")
+    fetch_stub = ->(key, _) { "abc" if key == "VERSION" }
 
-    migrator = MonarchMigrate.migrator
-
-    assert_equal "abc", migrator.version
+    ENV.stub(:fetch, fetch_stub) do
+      assert_equal "abc", MonarchMigrate.migrator.version
+    end
   end
 end

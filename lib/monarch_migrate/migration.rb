@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
-require "logger"
-
 module MonarchMigrate
   class Migration
-    def initialize(path, logger: nil)
+    def initialize(path)
       @path = path.to_s
-      @logger = logger || Logger.new($stderr)
     end
 
     def filename
@@ -25,25 +22,25 @@ module MonarchMigrate
       !MigrationRecord.exists?(version: version)
     end
 
-    def run
+    def run(io = $stdout)
       ActiveRecord::Base.connection.transaction do
-        logger.info "Running data migration #{version}: #{name}"
+        io.puts "Running data migration #{version}: #{name}"
 
         begin
           instance_eval File.read(path), path
           MigrationRecord.create!(version: version)
-          logger.info "Migration complete"
+          io.puts "Migration complete"
         rescue => e
-          logger.error "Migration failed due to #{e}"
+          io.puts "Migration failed due to #{e}"
           raise ActiveRecord::Rollback
         end
 
-        logger.info "\n"
+        io.puts
       end
     end
 
     private
 
-    attr_reader :path, :logger
+    attr_reader :path
   end
 end

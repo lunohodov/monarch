@@ -2,6 +2,8 @@ require "test_helper"
 
 module MonarchMigrate
   class MigrationTest < Minitest::Test
+    include Testing::Stream
+
     class GoodMigration
       def self.migrate!
       end
@@ -16,7 +18,7 @@ module MonarchMigrate
     def setup
       super
       migration_path = File.expand_path("../fixtures/db/data_migrate/200010101011_good_migration.rb", __dir__)
-      @migration = Migration.new(migration_path, logger: stub_everything("logger", info: nil))
+      @migration = Migration.new(migration_path)
     end
 
     def teardown
@@ -46,19 +48,25 @@ module MonarchMigrate
       refute @migration.pending?
     end
 
-    def test_run_creates_a_migration_record
-      @migration.run
+    def test_run
+      out = capture(:stdout) { @migration.run }
 
       assert MigrationRecord.find_by(version: @migration.version)
+
+      assert_match(/Running data migration #{@migration.version}: #{@migration.name}/, out)
+      assert_match(/Migration complete/, out)
     end
 
     def test_run_will_rollback_when_migration_fails
       migration_path = File.expand_path("../fixtures/db/data_migrate/200010101010_bad_migration.rb", __dir__)
-      bad_migration = Migration.new(migration_path, logger: stub_everything("logger", info: nil))
+      bad_migration = Migration.new(migration_path)
 
-      bad_migration.run
+      out = capture(:stdout) { bad_migration.run }
 
       assert_equal MigrationRecord.count, 0
+
+      assert_match(/Migration failed due to/, out)
+      assert_match(/Error from migration/, out)
     end
   end
 end
