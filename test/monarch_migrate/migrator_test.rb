@@ -46,6 +46,12 @@ module MonarchMigrate
       assert_migration_did_run("200010101011")
     end
 
+    def test_run_raises_an_error_when_the_specified_migration_does_not_exist
+      migrator = create_migrator(version: "0")
+
+      assert_raises(ActiveRecord::UnknownMigrationVersionError) { capture(:stdout) { migrator.run } }
+    end
+
     def test_migrations_status_is_empty_without_any_migrations
       status = Dir.mktmpdir do |dir|
         create_migrator(dir).migrations_status

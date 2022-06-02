@@ -49,7 +49,9 @@ module MonarchMigrate
 
     def migration_files
       if version
-        Dir["#{path}/#{version}_*.rb"]
+        Dir["#{path}/#{version}_*.rb"].tap do |entries|
+          raise ActiveRecord::UnknownMigrationVersionError.new(version) if entries.empty?
+        end
       else
         Dir["#{path}/*_*.rb"]
       end
