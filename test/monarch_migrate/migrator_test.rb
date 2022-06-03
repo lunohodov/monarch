@@ -26,9 +26,10 @@ module MonarchMigrate
     def test_runs_pending_migrations
       MigrationRecord.create!(version: "200010101010")
 
-      refute_migration_did_run("200010101011")
+      result = @migrator.run(@out)
 
-      capture(:stdout) { @migrator.run }
+      assert_equal %w[200010101011], result.map(&:version)
+      assert_output_match %r{Running 1 data migrations}
 
       assert_migration_did_run("200010101011")
     end
@@ -36,7 +37,10 @@ module MonarchMigrate
     def test_runs_only_the_specified_migration
       migrator = create_migrator(version: "200010101011")
 
-      capture(:stdout) { migrator.run }
+      result = migrator.run(@out)
+
+      assert_equal %w[200010101011], result.map(&:version)
+      assert_output_match %r{Running 1 data migrations}
 
       refute_migration_did_run("200010101010")
       assert_migration_did_run("200010101011")
@@ -45,7 +49,7 @@ module MonarchMigrate
     def test_run_raises_an_error_when_the_specified_migration_does_not_exist
       migrator = create_migrator(version: "0")
 
-      assert_raises(ActiveRecord::UnknownMigrationVersionError) { capture(:stdout) { migrator.run } }
+      assert_raises(ActiveRecord::UnknownMigrationVersionError) { migrator.run }
     end
 
     def test_migrations_status_is_empty_without_any_migrations

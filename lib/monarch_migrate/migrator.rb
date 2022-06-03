@@ -20,12 +20,15 @@ module MonarchMigrate
       migrations.select(&:pending?)
     end
 
-    def run(io = $stdout)
+    def run(io = nil)
+      io ||= File.open(File::NULL, "w")
+
       if pending_migrations.any?
         io.puts "Running #{pending_migrations.size} data migrations"
         pending_migrations.sort_by(&:version).each { |m| m.run(io) }
       else
         io.puts "No data migrations pending"
+        []
       end
     end
 

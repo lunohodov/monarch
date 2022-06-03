@@ -45,24 +45,24 @@ module MonarchMigrate
     end
 
     def test_run
-      out = capture(:stdout) { @migration.run }
+      @migration.run(@out)
 
       assert_migration_did_run(@migration.version)
 
-      assert_match(/Running data migration #{@migration.version}: #{@migration.name}/, out)
-      assert_match(/Migration complete/, out)
+      assert_output_match %r{Running data migration #{@migration.version}: #{@migration.name}}
+      assert_output_match %r{Migration complete}
     end
 
     def test_run_will_rollback_when_migration_fails
       migration_path = File.expand_path("../fixtures/db/data_migrate/200010101010_bad_migration.rb", __dir__)
       bad_migration = Migration.new(migration_path)
 
-      out = capture(:stdout) { bad_migration.run }
+      bad_migration.run(@out)
 
       refute_migration_did_run(bad_migration.version)
 
-      assert_match(/Migration failed due to/, out)
-      assert_match(/Error from migration/, out)
+      assert_output_match %r{Migration failed due to}
+      assert_output_match %r{Error from migration}
     end
   end
 end

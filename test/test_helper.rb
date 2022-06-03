@@ -15,6 +15,11 @@ require "monarch_migrate"
 module MonarchMigrate
   module Testing
     module DataMigrations
+      def setup
+        super
+        @out = StringIO.new
+      end
+
       def teardown
         super
         MigrationRecord.destroy_all
@@ -26,6 +31,10 @@ module MonarchMigrate
 
       def assert_migration_did_run(version)
         assert MigrationRecord.exists?(version: version)
+      end
+
+      def assert_output_match(matcher)
+        assert_match(matcher, @out.string)
       end
     end
 

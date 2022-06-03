@@ -22,7 +22,9 @@ module MonarchMigrate
       !MigrationRecord.exists?(version: version)
     end
 
-    def run(io = $stdout)
+    def run(io = nil)
+      io ||= File.open(File::NULL, "w")
+
       ActiveRecord::Base.connection.transaction do
         io.puts "Running data migration #{version}: #{name}"
 
