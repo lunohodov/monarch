@@ -14,6 +14,21 @@ require "monarch_migrate"
 
 module MonarchMigrate
   module Testing
+    module DataMigrations
+      def teardown
+        super
+        MigrationRecord.destroy_all
+      end
+
+      def refute_migration_did_run(version)
+        refute MigrationRecord.exists?(version: version)
+      end
+
+      def assert_migration_did_run(version)
+        assert MigrationRecord.exists?(version: version)
+      end
+    end
+
     module Stream
       def capture(stream)
         stream = stream.to_s

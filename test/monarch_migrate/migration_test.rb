@@ -3,6 +3,7 @@ require "test_helper"
 module MonarchMigrate
   class MigrationTest < Minitest::Test
     include Testing::Stream
+    include Testing::DataMigrations
 
     class GoodMigration
       def self.migrate!
@@ -19,11 +20,6 @@ module MonarchMigrate
       super
       migration_path = File.expand_path("../fixtures/db/data_migrate/200010101011_good_migration.rb", __dir__)
       @migration = Migration.new(migration_path)
-    end
-
-    def teardown
-      super
-      MigrationRecord.destroy_all
     end
 
     def test_filename
@@ -51,7 +47,7 @@ module MonarchMigrate
     def test_run
       out = capture(:stdout) { @migration.run }
 
-      assert MigrationRecord.find_by(version: @migration.version)
+      assert_migration_did_run(@migration.version)
 
       assert_match(/Running data migration #{@migration.version}: #{@migration.name}/, out)
       assert_match(/Migration complete/, out)
@@ -63,7 +59,7 @@ module MonarchMigrate
 
       out = capture(:stdout) { bad_migration.run }
 
-      assert_equal MigrationRecord.count, 0
+      refute_migration_did_run(bad_migration.version)
 
       assert_match(/Migration failed due to/, out)
       assert_match(/Error from migration/, out)

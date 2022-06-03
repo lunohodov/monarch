@@ -3,15 +3,11 @@ require "test_helper"
 module MonarchMigrate
   class MigratorTest < Minitest::Test
     include Testing::Stream
+    include Testing::DataMigrations
 
     def setup
       super
       @migrator = create_migrator
-    end
-
-    def teardown
-      super
-      MigrationRecord.destroy_all
     end
 
     def test_migrations_include_all_migration_files
@@ -69,14 +65,6 @@ module MonarchMigrate
       assert_equal status[0], ["up", "200010101000", "***** NO FILE *****"]
       assert_equal status[1], ["down", "200010101010", "Bad migration"]
       assert_equal status[2], ["down", "200010101011", "Good migration"]
-    end
-
-    def refute_migration_did_run(version)
-      refute MigrationRecord.exists?(version: version)
-    end
-
-    def assert_migration_did_run(version)
-      assert MigrationRecord.exists?(version: version)
     end
 
     def create_migrator(path = nil, version: nil)
