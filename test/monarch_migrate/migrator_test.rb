@@ -2,7 +2,6 @@ require "test_helper"
 
 module MonarchMigrate
   class MigratorTest < Minitest::Test
-    include Testing::Stream
     include Testing::DataMigrations
 
     def setup
@@ -25,22 +24,24 @@ module MonarchMigrate
 
     def test_runs_pending_migrations
       MigrationRecord.create!(version: "200010101010")
+      out = StringIO.new
 
-      result = @migrator.run(@out)
+      result = @migrator.run(out)
 
       assert_equal %w[200010101011], result.map(&:version)
-      assert_output_match %r{Running 1 data migrations}
+      assert_match %r{Running 1 data migrations}, out.string
 
       assert_migration_did_run("200010101011")
     end
 
     def test_runs_only_the_specified_migration
       migrator = create_migrator(version: "200010101011")
+      out = StringIO.new
 
-      result = migrator.run(@out)
+      result = migrator.run(out)
 
       assert_equal %w[200010101011], result.map(&:version)
-      assert_output_match %r{Running 1 data migrations}
+      assert_match %r{Running 1 data migrations}, out.string
 
       refute_migration_did_run("200010101010")
       assert_migration_did_run("200010101011")

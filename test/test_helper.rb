@@ -15,11 +15,6 @@ require "monarch_migrate"
 module MonarchMigrate
   module Testing
     module DataMigrations
-      def setup
-        super
-        @out = StringIO.new
-      end
-
       def teardown
         super
         MigrationRecord.destroy_all
