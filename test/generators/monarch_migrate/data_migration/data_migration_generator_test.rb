@@ -4,9 +4,7 @@ require "generators/monarch_migrate/data_migration/data_migration_generator"
 
 module MonarchMigrate
   module Generators
-    class DataMigrationGeneratorTest < Minitest::Test
-      include Testing
-
+    class DataMigrationGeneratorTest < TestCase
       tests DataMigrationGenerator
       destination File.expand_path("../tmp", __dir__)
 

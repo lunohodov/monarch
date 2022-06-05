@@ -54,12 +54,10 @@ module MonarchMigrate
   end
 
   module Generators
-    module Testing
-      def self.included(other)
-        other.include Rails::Generators::Testing::Behaviour
-        other.include Rails::Generators::Testing::Assertions
-        other.include FileUtils
-      end
+    class TestCase < Minitest::Test
+      include Rails::Generators::Testing::Behaviour
+      include Rails::Generators::Testing::Assertions
+      include FileUtils
 
       def setup
         super

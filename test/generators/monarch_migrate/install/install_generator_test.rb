@@ -4,9 +4,7 @@ require "generators/monarch_migrate/install/install_generator"
 
 module MonarchMigrate
   module Generators
-    class InstallGeneratorTest < Minitest::Test
-      include Testing
-
+    class InstallGeneratorTest < TestCase
       tests InstallGenerator
       destination File.expand_path("../tmp", __dir__)
 
