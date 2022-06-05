@@ -2,9 +2,11 @@
 
 module MonarchMigrate
   class MigrationRecord < ActiveRecord::Base
-    self.table_name = MonarchMigrate.data_migrations_table_name
-
     class << self
+      def table_name
+        MonarchMigrate.data_migrations_table_name
+      end
+
       def normalized_versions
         all_versions.map { |v| normalize_version(v) }
       end
