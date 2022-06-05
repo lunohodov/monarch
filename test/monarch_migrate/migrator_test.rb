@@ -1,9 +1,7 @@
 require "test_helper"
 
 module MonarchMigrate
-  class MigratorTest < Minitest::Test
-    include Testing::DataMigrations
-
+  class MigratorTest < TestCase
     def setup
       super
       @migrator = create_migrator

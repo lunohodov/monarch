@@ -15,11 +15,6 @@ require "monarch_migrate"
 module MonarchMigrate
   module Testing
     module DataMigrations
-      def teardown
-        super
-        MigrationRecord.destroy_all
-      end
-
       def refute_migration_did_run(version)
         refute MigrationRecord.exists?(version: version)
       end
@@ -50,6 +45,15 @@ module MonarchMigrate
         captured_stream.unlink
         stream_io.reopen(origin_stream)
       end
+    end
+  end
+
+  class TestCase < Minitest::Test
+    include Testing::DataMigrations
+
+    def setup
+      super
+      MigrationRecord.delete_all
     end
   end
 

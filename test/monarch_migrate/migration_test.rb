@@ -1,9 +1,7 @@
 require "test_helper"
 
 module MonarchMigrate
-  class MigrationTest < Minitest::Test
-    include Testing::DataMigrations
-
+  class MigrationTest < TestCase
     class GoodMigration
       def self.migrate!
       end
