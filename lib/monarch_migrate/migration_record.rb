@@ -4,7 +4,7 @@ module MonarchMigrate
   class MigrationRecord < ActiveRecord::Base
     class << self
       def table_name
-        MonarchMigrate.data_migrations_table_name
+        "#{table_name_prefix}#{MonarchMigrate.data_migrations_table_name}#{table_name_suffix}"
       end
 
       def normalized_versions
