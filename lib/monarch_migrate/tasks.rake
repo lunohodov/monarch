@@ -8,6 +8,7 @@ namespace :db do
     end
 
     namespace :migrate do
+      desc "Display status of data migrations"
       task status: :environment do
         unless ActiveRecord::Base.connection.data_source_exists?(MonarchMigrate.data_migrations_table_name)
           Kernel.abort "Data migrations table does not exist yet."
