@@ -1,5 +1,7 @@
 # Sensible Data Migrations for Rails
 
+## Why
+
 <blockquote>
   <p>The main purpose of Rails' migration feature is to issue commands that modify the schema using a consistent process. Migrations can also be used to add or modify data. This is useful in an existing database that can't be destroyed and recreated, such as a production database.</p>
   <a href="https://guides.rubyonrails.org/active_record_migrations.html#migrations-and-seed-data">
@@ -8,28 +10,27 @@
 </blockquote>
 
 The motivation behind Rails' migration mechanism is schema modification. Using it
-for data changes in the database comes second.
-
-Yet, adding of modifying data via regular migrations can be problematic.
+for data changes in the database comes second. Yet, adding or modifying data via
+regular migrations can be problematic.
 
 The first issue is that application deployment now depends on the data migration
 to be completed. This may not be a problem with small databases but large
 databases with millions of records will respond with hanging or failed migrations.
 
-Another issue is that data migration files usually stay in `db/migrate` for posterity.
+Another issue is that data migration files tend to stay in `db/migrate` for posterity.
 As a result, they will run whenever a developer sets up their local development environment.
-This is unnecessary for a pristine database. Especially so when there are [scripts][2] to
+This is unnecessary for a pristine database. Especially when there are [scripts][2] to
 seed the correct data.
 
-In addition, using ActiveRecord models in migrations has its [quirks](#using-activerecord-models-in-migrations).
+The purpose of `monarch_migrate` is to solve the above issues by separating data from schema migrations.
 
-The purpose of `monarch_migrate` is to solve the above issues with separating data
-from schema migrations.
-
-This library assumes that:
+It is assumed that:
 
 - You run data migrations *only* on production and rely on seed [scripts][2] i.e. `dev:prime` for local development.
 - You run data migrations manually.
+- You want to write tests your data migrations.
+
+
 
 ## Install
 
@@ -41,40 +42,51 @@ gem "monarch_migrate"
 
 Run the bundle command to install it.
 
-After you install MonarchMigrate, you need to run the generator:
+After you install the gem, you need to run the generator:
 
 ```shell
 rails generate monarch_migrate:install
 ```
 
-The above generates a schema migration which adds a table for keeping track
-of run data migrations.
+The install generator creates a migration file that adds a `data_migration_records`
+table. It is where the gem keeps track of data migrations we have already ran.
+
 
 
 ## Usage
 
-Data migrations in MonarchMigrate have a similar structure to regular migrations
-in Rails. Files are put into `db/data_migrate` and follow the same naming pattern.
+Data migrations have a similar structure to regular migrations in Rails. Files are
+put into `db/data_migrate` and follow the same naming pattern.
 
-To create a new data migration, run:
+Let's start with an example.
+
+Suppose we have designed a system where users have first and last names. Time passes and
+it becomes clear this is [wrong][3]. Now, we want to put things right and come
+up with the following plan:
+
+1. Add a `name` column to `users` table to hold person's full name.
+2. Adapt the `User` model and use a data migration to update existing records.
+3. Drop `first_name` and `last_name` columns.
+
+To create the data migration to update existing user records, run:
 
 ```shell
-rails generate monarch_migrate:data_migration downcase_usernames
+rails generate monarch_migrate:data_migration backfill_users_name
 ```
 
 In contrast to regular migrations, there is no need to inherit any classes:
 
 ```ruby
-# db/data_migrate/20220605083010_downcase_usernames.rb
+# db/data_migrate/20220605083010_backfill_users_name.rb
 ActiveRecord::Base.connection.execute(<<-SQL)
-  UPDATE users SET username = lower(username);
+  UPDATE users SET name = concat(first_name, ' ', last_name) WHERE name IS NULL;
 SQL
 
-SearchIndex.rebuild
+SearchIndex::RebuildJob.perform_later
 ```
 
 As seen above, it is plain ruby code where you can refer to any object you
-need. MonarchMigrate will run each migration in a separate transaction.
+need. Each data migration runs in a separate transaction.
 
 To run pending data migrations:
 
@@ -88,12 +100,127 @@ Or a specific version:
 rails data:migrate VERSION=20220605083010
 ```
 
+
+## Testing
+
+Testing data migrations can be the difference between simply rerunning
+the migration and having to recover from a data loss.
+
+This is why `monarch_migrate` includes test helpers for both RSpec and TestUnit.
+
+### RSpec
+
+For `rspec`, add the following line to your `spec/rails_helper.rb`:
+
+```ruby
+require "monarch_migrate/rspec"
+```
+
+Then:
+
+```ruby
+# spec/data_migrations/20220605083010_backfill_users_name_spec.rb
+describe "20220605083010_backfill_users_name", type: :data_migration do
+  subject { run_data_migration }
+
+  it "assigns user's name" do
+    user = users(:without_name_migrated)
+    # or if you're using FactoryBot:
+    # user = create(:user, first_name: "Guybrush", last_name: "Threepwood", name: nil)
+
+    expect(subject).to change { user.reload.name }.to("Guybrush Threepwood")
+  end
+
+  it "does not assign name to already migrated users" do
+    user = users(:with_name_migrated)
+    # or if you're using FactoryBot:
+    # user = create(:user, first_name: "", last_name: "", name: "Guybrush Threepwood")
+
+    expect(subject).not_to change { user.reload.name }
+  end
+
+  context "when the user has no last name" do
+    it "does not leave a trailing space" do
+      user = users(:without_name_migrated)
+      # or if you're using FactoryBot:
+      # user = create(:user, first_name: "Guybrush", last_name: nil, name: nil)
+
+      expect(subject).to change { user.reload.name }.to("Guybrush")
+    end
+  end
+
+  # And so on ...
+end
+```
+
+### TestUnit
+
+For `test_unit`, add this line to your `test/test_helper.rb`:
+
+```ruby
+require "monarch_migrate/test_unit"
+```
+
+Then:
+
+```ruby
+# test/data_migrations/20220605083010_backfill_users_name_test.rb
+class BackfillUsersNameTest < MonarchMigrate::TestCase
+  def test_assigns_users_name
+    user = users(:without_name_migrated)
+    # or if you're using FactoryBot:
+    # user = create(:user, first_name: "Guybrush", last_name: "Threepwood", name: nil)
+
+    run_data_migration
+
+    assert_equal "Guybrush Threepwood", user.reload.name
+  end
+
+  def test_does_not_assign_name_to_alredy_migrated_users
+    user = users(:with_name_migrated)
+    # or if you're using FactoryBot:
+    # user = create(:user, first_name: "", last_name: "", name: "Guybrush Threepwood")
+
+    run_data_migration
+
+    assert_equal "Guybrush Threepwood", user.reload.name
+  end
+
+  def test_does_not_leave_trailing_space_when_user_has_no_last_name
+    user = users(:without_name_migrated)
+    # or if you're using FactoryBot:
+    # user = create(:user, first_name: "Guybrush", last_name: nil, name: nil)
+
+    run_data_migration
+
+    assert_equal "Guybrush", user.reload.name
+  end
+
+  # And so on ...
+end
+```
+
+Data migrations become obsolete, once the data manipulation successfully completes.
+So are the corresponding tests. These will fail after database columns are dropped
+e.g. `first_name` and `last_name`.
+
+One solution is to use the following development workflow:
+
+1. Implement the data migration using TDD.
+1. Commit, push and wait for CI to pass.
+1. Request review from peers.
+1. Once approved, remove the test files in a consecutive commit and push again.
+1. Merge into trunk.
+
+This will also keep the test files in repo's history for posterity.
+
 ## Known Issues and Limitations
 
-The following issues and limitations are not necessary inherent to MonarchMigrate.
+The following issues and limitations are not necessary inherent to `monarch_migrate`.
 Some are innate to migrations in general.
 
-### Using ActiveRecord Models in Migrations
+
+### Using Models in Migrations
 
 <blockquote>
   <p>The Active Record way claims that intelligence belongs in your models, not in the database.</p>
@@ -106,15 +233,7 @@ Typically, data migrations relate closely to business models. In an ideal Rails 
 data manipulations would depend on model logic to enforce validation, conform to
 business rules, etc. Hence, it is very tempting to use ActiveRecord models in migrations.
 
-Suppose we have designed a system where users have first and last names. Time passes and
-it becomes clear this is [wrong][3]. Now, we want to put things right and come
-up with the following plan:
-
-1. Add a `name` column to `users` table to hold the entire name of a person.
-2. Change the `User` model and use a data migration to update existing records.
-3. Drop `first_name` and `last_name` columns.
-
-A regular Rails migration for updating existing records may look something like this:
+Here is a regular Rails migration for our example:
 
 ```ruby
 # db/migrate/20220605083010_backfill_users_name.rb
@@ -155,22 +274,12 @@ limit their use and do as much processing as possible in Postgres.
 
 ### Long-running Tasks in Migrations
 
-As mentioned above, MonarchMigrate (similar to Rails) runs each migration in a separate
-transaction. A long-running task within a migration will keep the transaction open for
+As mentioned, each data migration runs in a separate transaction.
+A long-running task within a migration keeps the transaction open for
 the duration of the task. As a result, the migration may hang or fail.
 
-To avoid this, we can run such tasks asynchronously.
+To avoid this, run such tasks asynchronously.
 
-Back to the previous example:
-
-```ruby
-# db/data_migrate/20220605083010_downcase_usernames.rb
-ActiveRecord::Base.connection.execute(<<-SQL)
-  UPDATE users SET username = lower(username);
-SQL
-
-SearchIndex::RebuildJob.perform_later
-```
 
 
 ## Trivia
@@ -185,19 +294,21 @@ The population cycles through three to five generations to reach their
 destination. In the end, a new generation of butterflies complete the
 journey their great-great-great-grandparents started.
 
-It is still a mystery to scientists how the new generations know where to go,
+It is a mystery to scientists how the new generations know where to go,
 but they appear to navigate using a combination of the Earth's magnetic field
 and the position of the sun.
 
-Genetically speaking, this is a truly incredible data migration!
+Genetically speaking, this is an incredible data migration!
+
 
 
 ## See Also
 
 Alternative gems
 
-- [nonschema_migrations](https://github.com/jasonfb/nonschema_migrations) - Exactly like schema migrations but for data.
-- [data-migrate](https://github.com/ilyakatz/data-migrate) - A gem to run data migrations alongside schema migrations.
+- https://github.com/OffgridElectric/rails-data-migrations
+- https://github.com/ilyakatz/data-migrate
+- https://github.com/jasonfb/nonschema_migrations
 
 Articles
 
@@ -206,6 +317,7 @@ Articles
 - [Three Useful Data Migration Patterns for Rails](https://www.ombulabs.com/blog/rails/data-migrations/three-useful-data-migrations-patterns-in-rails.html)
 - [Ruby on Rails Model Patterns and Anti-patterns](https://blog.appsignal.com/2020/11/18/rails-model-patterns-and-anti-patterns.html)
 - [Rails Migrations with Zero Downtime](https://www.cloudbees.com/blog/rails-migrations-zero-downtime)
+
 
 
 ## License
