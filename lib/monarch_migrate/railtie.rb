@@ -1,3 +1,5 @@
+require "rails"
+
 module MonarchMigrate
   class Railtie < Rails::Railtie
     railtie_name :monarch_migrate

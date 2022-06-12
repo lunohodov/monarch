@@ -20,8 +20,7 @@ Gem::Specification.new do |spec|
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features|gemfiles|tmp)/}) }
   end
 
-  spec.add_dependency("activerecord", ">= 5.2.0")
-  spec.add_dependency("railties", ">= 5.2.0")
+  spec.add_runtime_dependency("rails", ">= 5.2.0")
 
   spec.add_development_dependency("appraisal")
   spec.add_development_dependency("minitest")
