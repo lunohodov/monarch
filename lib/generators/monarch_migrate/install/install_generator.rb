@@ -28,7 +28,7 @@ module MonarchMigrate
       end
 
       def migration_table_name
-        MonarchMigrate.data_migrations_table_name
+        MigrationRecord.table_name
       end
 
       private

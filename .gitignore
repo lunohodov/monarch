@@ -77,6 +77,8 @@ fabric.properties
 # Ignore gem compile directory
 /pkg
 
+/gemfiles/*.lock
+
 # Ignore bundler config.
 /.bundle
 

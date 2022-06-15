@@ -45,5 +45,16 @@ jobs:
       - name: "Reset app database"
         run: bundle exec rake fake:db:reset
 
-      - name: "Run test"
-        run: bundle exec rake
+      - name: "Run tests without acceptance"
+        run: |
+          bundle exec rake test
+
+      - name: "Run acceptance tests for RSpec"
+        run: |
+          bundle add rspec-rails
+          bundle exec rake TEST=test/acceptance/testing_test.rb TESTOPTS="--name='test_rspec_tests'"
+
+      - name: "Run acceptance tests for TestUnit"
+        run: |
+          bundle remove rspec-rails
+          bundle exec rake TEST=test/acceptance/testing_test.rb TESTOPTS="--name='test_test_unit_tests'"

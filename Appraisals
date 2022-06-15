@@ -1,11 +1,14 @@
 appraise "rails_5.2" do
-  gem "railties", "~> 5.2"
+  gem "rails", "~> 5.2"
 end
 
 appraise "rails_6.1" do
-  gem "railties", "~> 6.1"
+  gem "rails", "~> 6.1"
+  gem "net-smtp", require: false
+  gem "net-imap", require: false
+  gem "net-pop", require: false
 end
 
 appraise "rails_7.0" do
-  gem "railties", "~> 7.0"
+  gem "rails", "~> 7.0"
 end
