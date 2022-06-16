@@ -1,5 +1,6 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
+require "standard/rake"
 
 namespace :fake do
   require_relative "test/fake/application"
