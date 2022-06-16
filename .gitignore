@@ -73,6 +73,7 @@ fabric.properties
 
 # Migration generated during tests
 /test/generators/monarch_migrate/tmp
+/test/generators/test_unit/tmp
 
 # Ignore gem compile directory
 /pkg
