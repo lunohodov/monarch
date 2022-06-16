@@ -7,8 +7,6 @@ module MonarchMigrate
 
       source_root File.expand_path("../templates", __FILE__)
 
-      hook_for :test_framework, as: :data_migration
-
       def create_data_migration
         validate_file_name!
 
@@ -17,6 +15,8 @@ module MonarchMigrate
           File.join(MonarchMigrate.data_migrations_path, "#{file_name}.rb")
         )
       end
+
+      hook_for :test_framework, as: :data_migration
 
       private
 

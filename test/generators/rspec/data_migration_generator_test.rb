@@ -1,7 +1,7 @@
 require "test_helper"
-require "generators/test_unit/data_migration_generator"
+require "generators/rspec/data_migration_generator"
 
-module TestUnit
+module Rspec
   module Generators
     class DataMigrationGeneratorTest < ::Rails::Generators::TestCase
       tests DataMigrationGenerator
@@ -10,14 +10,14 @@ module TestUnit
       setup :prepare_destination
       teardown :prepare_destination
 
-      test "creates a migration test" do
+      test "creates a migration spec" do
         stubbed_migrator = create_migrator
 
         MonarchMigrate.stub(:migrator, stubbed_migrator) do
           run_generator ["good_migration"]
 
           # Take advantage of version numbering when inferring the filename
-          assert_migration "test/data_migrations/good_migration_test.rb"
+          assert_migration "spec/data_migrations/good_migration_spec.rb"
         end
       end
 
@@ -26,7 +26,7 @@ module TestUnit
 
         assert_match %r{Expecting a data migration matching \*good_migration.rb but none found. Aborting}, output
         # Take advantage of version numbering when inferring the filename
-        assert_no_migration "test/data_migrations/good_migration_test.rb"
+        assert_no_migration "spec/data_migrations/good_migration_spec.rb"
       end
     end
   end
