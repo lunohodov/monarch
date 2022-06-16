@@ -5,7 +5,6 @@ require "generators/monarch_migrate/data_migration/data_migration_generator"
 module MonarchMigrate
   module Generators
     class DataMigrationGeneratorTest < Rails::Generators::TestCase
-
       tests DataMigrationGenerator
       destination File.expand_path("../tmp", __dir__)
 
