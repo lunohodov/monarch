@@ -1,6 +1,8 @@
 # Sensible Data Migrations for Rails
 
-## Why
+A library for Rails developers who are not willing to leave data migrations to chance.
+
+## Why?
 
 <blockquote>
   <p>The main purpose of Rails' migration feature is to issue commands that modify the schema using a consistent process. Migrations can also be used to add or modify data. This is useful in an existing database that can't be destroyed and recreated, such as a production database.</p>
@@ -28,7 +30,7 @@ It is assumed that:
 
 - You run data migrations *only* on production and rely on seed [scripts][2] i.e. `dev:prime` for local development.
 - You run data migrations manually.
-- You want to write tests your data migrations.
+- You want to test your data migrations in a thorough and automated manner.
 
 
 
