@@ -71,7 +71,7 @@ up with the following plan:
 To create the data migration to update existing user records, run:
 
 ```shell
-rails generate monarch_migrate:data_migration backfill_users_name
+rails generate data_migration backfill_users_name
 ```
 
 In contrast to regular migrations, there is no need to inherit any classes:

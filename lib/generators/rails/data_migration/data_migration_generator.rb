@@ -1,6 +1,6 @@
 require "rails/generators/active_record"
 
-module MonarchMigrate
+module Rails
   module Generators
     class DataMigrationGenerator < Rails::Generators::NamedBase
       include ActiveRecord::Generators::Migration

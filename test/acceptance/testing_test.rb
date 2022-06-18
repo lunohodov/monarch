@@ -91,7 +91,7 @@ module MonarchMigrate
     end
 
     def generate_data_migration
-      successfully "bundle exec rails generate monarch_migrate:data_migration backfill_users_name"
+      successfully "bundle exec rails generate data_migration backfill_users_name"
     end
 
     def fixture_root
