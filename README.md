@@ -128,7 +128,7 @@ describe "20220605083010_backfill_users_name", type: :data_migration do
     # or if you're using FactoryBot:
     # user = create(:user, first_name: "Guybrush", last_name: "Threepwood", name: nil)
 
-    expect(subject).to change { user.reload.name }.to("Guybrush Threepwood")
+    expect { subject }.to change { user.reload.name }.to("Guybrush Threepwood")
   end
 
   it "does not assign name to already migrated users" do
@@ -136,7 +136,7 @@ describe "20220605083010_backfill_users_name", type: :data_migration do
     # or if you're using FactoryBot:
     # user = create(:user, first_name: "", last_name: "", name: "Guybrush Threepwood")
 
-    expect(subject).not_to change { user.reload.name }
+    expect { subject }.not_to change { user.reload.name }
   end
 
   context "when the user has no last name" do
@@ -145,7 +145,7 @@ describe "20220605083010_backfill_users_name", type: :data_migration do
       # or if you're using FactoryBot:
       # user = create(:user, first_name: "Guybrush", last_name: nil, name: nil)
 
-      expect(subject).to change { user.reload.name }.to("Guybrush")
+      expect { subject }.to change { user.reload.name }.to("Guybrush")
     end
   end
 
