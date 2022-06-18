@@ -1,6 +1,6 @@
 require "rails/generators/active_record"
 
-module MonarchMigrate
+module Rails
   module Generators
     class DataMigrationGenerator < Rails::Generators::NamedBase
       include ActiveRecord::Generators::Migration
@@ -15,6 +15,8 @@ module MonarchMigrate
           File.join(MonarchMigrate.data_migrations_path, "#{file_name}.rb")
         )
       end
+
+      hook_for :test_framework, as: :data_migration
 
       private
 

@@ -72,10 +72,12 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # Migration generated during tests
-/test/generators/monarch_migrate/tmp
+/test/generators/**/tmp
 
 # Ignore gem compile directory
 /pkg
+
+/gemfiles/*.lock
 
 # Ignore bundler config.
 /.bundle

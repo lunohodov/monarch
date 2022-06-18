@@ -1,0 +1,5 @@
+Description:
+  Generate a new data migration
+
+Examples:
+    rails generate data_migration assign_name_to_users

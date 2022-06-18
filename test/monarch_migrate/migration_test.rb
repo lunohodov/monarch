@@ -1,7 +1,7 @@
 require "test_helper"
 
 module MonarchMigrate
-  class MigrationTest < TestCase
+  class MigrationTest < ActiveSupport::TestCase
     class GoodMigration
       def self.migrate!
       end
@@ -13,35 +13,36 @@ module MonarchMigrate
       end
     end
 
-    def setup
-      super
+    include Testing::Assertions
+
+    setup do
       migration_path = File.expand_path("../fixtures/db/data_migrate/200010101011_good_migration.rb", __dir__)
       @migration = Migration.new(migration_path)
     end
 
-    def test_filename
+    test "filename" do
       assert_equal @migration.filename, "200010101011_good_migration.rb"
     end
 
-    def test_name
+    test "name" do
       assert_equal @migration.name, "Good migration"
     end
 
-    def test_version
+    test "version" do
       assert_equal @migration.version, "200010101011"
     end
 
-    def test_is_pending_when_no_record_exists
+    test "pending when no record exists" do
       assert @migration.pending?
     end
 
-    def test_is_not_pending_when_record_exists
+    test "pending when record exists" do
       MigrationRecord.create(version: @migration.version)
 
       refute @migration.pending?
     end
 
-    def test_run
+    test "runs successfully" do
       out = StringIO.new
 
       @migration.run(out)
@@ -52,7 +53,7 @@ module MonarchMigrate
       assert_match %r{Migration complete}, out.string
     end
 
-    def test_run_will_rollback_when_migration_fails
+    test "rollbacks on failure" do
       out = StringIO.new
       bad_migration = Migration.new(
         File.expand_path("../fixtures/db/data_migrate/200010101010_bad_migration.rb", __dir__)

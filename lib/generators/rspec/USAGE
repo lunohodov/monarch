@@ -1,0 +1,12 @@
+Description:
+  Generate a spec for existing data migration.
+
+Examples:
+  Given a data migration `db/data_migrate/200010101011_downcase_users_name.rb`:
+    rails generate rspec:data_migration 200010101011_downcase_users_name
+
+  Alternatively, you can skip the version:
+    rails generate rspec:data_migration downcase_users_name
+
+  This will create:
+    spec/data_migrations/200010101011_downcase_users_name_spec.rb

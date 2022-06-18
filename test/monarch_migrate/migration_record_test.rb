@@ -1,8 +1,8 @@
 require "test_helper"
 
 module MonarchMigrate
-  class MigrationRecordTest < TestCase
-    def test_table_name
+  class MigrationRecordTest < ActiveSupport::TestCase
+    test "table_name" do
       assert_equal "data_migration_records", MigrationRecord.table_name
 
       ActiveRecord::Base.table_name_prefix = "prefix_"

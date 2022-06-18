@@ -1,14 +1,14 @@
 require "test_helper"
+require "rails/generators"
+require "generators/rails/data_migration/data_migration_generator"
 
-require "generators/monarch_migrate/data_migration/data_migration_generator"
-
-module MonarchMigrate
+module Rails
   module Generators
-    class DataMigrationGeneratorTest < TestCase
+    class DataMigrationGeneratorTest < ::Rails::Generators::TestCase
       tests DataMigrationGenerator
       destination File.expand_path("../tmp", __dir__)
 
-      def test_creates_a_migration
+      test "creates a migration" do
         run_generator ["test_migration"]
 
         assert_migration "db/data_migrate/test_migration.rb"

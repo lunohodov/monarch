@@ -1,26 +1,27 @@
 require "test_helper"
 
 module MonarchMigrate
-  class MigratorTest < TestCase
-    def setup
-      super
+  class MigratorTest < ActiveSupport::TestCase
+    include Testing::Assertions
+
+    setup do
       @migrator = create_migrator
     end
 
-    def test_migrations_include_all_migration_files
+    test "migrations include all migration files" do
       actual = @migrator.migrations.map(&:filename)
       expected = ["200010101010_bad_migration.rb", "200010101011_good_migration.rb"]
 
       assert_equal expected, actual
     end
 
-    def test_pending_migrations_exclude_ran_migrations
+    test "pending migrations exclude ran migrations" do
       MigrationRecord.create!(version: "200010101010")
 
       assert_equal ["200010101011_good_migration.rb"], @migrator.pending_migrations.map(&:filename)
     end
 
-    def test_runs_pending_migrations
+    test "runs pending migrations" do
       MigrationRecord.create!(version: "200010101010")
       out = StringIO.new
 
@@ -32,7 +33,7 @@ module MonarchMigrate
       assert_migration_did_run("200010101011")
     end
 
-    def test_runs_only_the_specified_migration
+    test "runs only the specified migration" do
       migrator = create_migrator(version: "200010101011")
       out = StringIO.new
 
@@ -45,13 +46,13 @@ module MonarchMigrate
       assert_migration_did_run("200010101011")
     end
 
-    def test_run_raises_an_error_when_the_specified_migration_does_not_exist
+    test "run raises an error when the specified migration does not exist" do
       migrator = create_migrator(version: "0")
 
       assert_raises(ActiveRecord::UnknownMigrationVersionError) { migrator.run }
     end
 
-    def test_run_idempotent_when_the_specified_migration_is_not_pending
+    test "does not run migration twice" do
       MigrationRecord.create!(version: "200010101010")
       migrator = create_migrator(version: "200010101010")
       out = StringIO.new
@@ -61,7 +62,7 @@ module MonarchMigrate
       assert_match %r{No data migrations pending}, out.string
     end
 
-    def test_migrations_status_is_empty_without_any_migrations
+    test "migrations status is empty when there are no migrations" do
       status = Dir.mktmpdir do |dir|
         create_migrator(dir).migrations_status
       end
@@ -69,7 +70,7 @@ module MonarchMigrate
       assert_empty status
     end
 
-    def test_migrations_status
+    test "migrations status" do
       MigrationRecord.create!(version: "200010101000")
 
       status = @migrator.migrations_status
@@ -78,12 +79,6 @@ module MonarchMigrate
       assert_equal status[0], ["up", "200010101000", "***** NO FILE *****"]
       assert_equal status[1], ["down", "200010101010", "Bad migration"]
       assert_equal status[2], ["down", "200010101011", "Good migration"]
-    end
-
-    def create_migrator(path = nil, version: nil)
-      path ||= File.expand_path("../fixtures/db/data_migrate", __dir__)
-
-      Migrator.new(path, version: version)
     end
   end
 end
