@@ -2,4 +2,4 @@ Description:
   Generate a schema migration to create the table used for data migrations
 
 Examples:
-    rails generate monarch_migrate:install
+  rails generate monarch_migrate:install
