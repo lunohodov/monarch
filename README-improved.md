@@ -202,6 +202,8 @@ class BackfillUsersNameTest < MonarchMigrate::TestCase
 end
 ```
 
+### Considerations
+
 Data migrations become obsolete, once the data manipulation successfully completes.
 So are the corresponding tests. These will fail after database columns are dropped
 e.g. `first_name` and `last_name`.
