@@ -2,7 +2,13 @@
 
 A library for Rails developers who are not willing to leave data migrations to chance.
 
-## Why?
+## Goals
+
+- Separate data migrations from schema migrations.
+- Allow testing data migrations beforehand.
+- Provide a uniform process for modifying data in the database.
+
+### Why?
 
 <blockquote>
   <p>The main purpose of Rails' migration feature is to issue commands that modify the schema using a consistent process. Migrations can also be used to add or modify data. This is useful in an existing database that can't be destroyed and recreated, such as a production database.</p>
