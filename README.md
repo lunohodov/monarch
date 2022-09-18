@@ -27,14 +27,14 @@ databases with millions of records will respond with hanging or failed migration
 
 Another issue is that data migration files tend to stay in `db/migrate` for posterity.
 As a result, they will run whenever a developer sets up their local development environment.
-This is unnecessary for a pristine database. Especially when there are [scripts][2] to
+This is unnecessary for a pristine database. Especially when there are [scripts][seed-scripts] to
 seed the correct data.
 
 The purpose of `monarch_migrate` is to solve the above issues by separating data from schema migrations.
 
 It is assumed that:
 
-- You run data migrations *only* on production and rely on seed [scripts][2] i.e. `dev:prime` for local development.
+- You run data migrations *only* on production and rely on seed [scripts][seed-scripts] i.e. `dev:prime` for local development.
 - You run data migrations manually.
 - You want to test your data migrations in a thorough and automated manner.
 
@@ -69,7 +69,7 @@ put into `db/data_migrate` and follow the same naming pattern.
 Let's start with an example.
 
 Suppose we have designed a system where users have first and last names. Time passes and
-it becomes clear this is [wrong][3]. Now, we want to put things right and come
+it becomes clear this is [wrong][falsehoods-names]. Now, we want to put things right and come
 up with the following plan:
 
 1. Add a `name` column to `users` table to hold person's full name.
@@ -274,7 +274,7 @@ end
 Unfortunately, with regular Rails migrations we will still face issue 4.
 
 To avoid it, we need to separate data from schema migrations and not run data
-migrations locally. With seed [scripts][2], there is no need to run them anyway.
+migrations locally. With seed [scripts][seed-scripts], there is no need to run them anyway.
 
 Keep the above in mind when referencing ActiveRecord models in data migrations. Ideally,
 limit their use and do as much processing as possible in Postgres.
@@ -332,9 +332,9 @@ Articles
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
-[2]: https://thoughtbot.com/blog/priming-the-pump
-[3]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
-[ci]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml
 [ci-image]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml/badge.svg
+[ci]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml
+[falsehoods-names]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
+[seed-scripts]: https://thoughtbot.com/blog/priming-the-pump
 [version-image]: https://badge.fury.io/rb/monarch_migrate.svg
 [version]: https://badge.fury.io/rb/monarch_migrate
