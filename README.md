@@ -1,4 +1,4 @@
-# Sensible Data Migrations for Rails
+# monarch_migrate [![Build Status][ci-image]][ci] [![Gem Version][version-image]][version]
 
 A library for Rails developers who are not willing to leave data migrations to chance.
 
@@ -334,3 +334,7 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 [2]: https://thoughtbot.com/blog/priming-the-pump
 [3]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
+[ci]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml
+[ci-image]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml/badge.svg
+[version-image]: https://badge.fury.io/rb/monarch_migrate.svg
+[version]: https://badge.fury.io/rb/monarch_migrate
