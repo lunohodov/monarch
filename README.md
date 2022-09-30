@@ -1,8 +1,29 @@
-# Sensible Data Migrations for Rails
+# monarch_migrate [![Build Status][ci-image]][ci] [![Gem Version][version-image]][version]
 
 A library for Rails developers who are not willing to leave data migrations to chance.
 
-## Why?
+<br />
+
+## Table of Contents
+
+- [Rationale](#rationale)
+- [Install](#install)
+- [Usage](#usage)
+  - [Create a Data Migration](#create-a-data-migration)
+  - [Running Data Migrations](#running-data-migrations)
+  - [Display Status of Data Migrations](#display-status-of-data-migrations)
+  - [Reverting Data Migrations](#reverting-data-migrations)
+- [Testing](#testing)
+  - [RSpec](#rspec)
+  - [TestUnit](#testunit)
+- [Suggested Workflow](#suggested-workflow)
+- [Trivia](#trivia)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+
+## Rationale
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 <blockquote>
   <p>The main purpose of Rails' migration feature is to issue commands that modify the schema using a consistent process. Migrations can also be used to add or modify data. This is useful in an existing database that can't be destroyed and recreated, such as a production database.</p>
@@ -11,30 +32,35 @@ A library for Rails developers who are not willing to leave data migrations to c
   </a>
 </blockquote>
 
-The motivation behind Rails' migration mechanism is schema modification. Using it
-for data changes in the database comes second. Yet, adding or modifying data via
-regular migrations can be problematic.
+The motivation behind Rails' migration mechanism is schema modification.
+Using it for data changes in the database comes second. Yet, adding or
+modifying data via regular migrations can be problematic.
 
-The first issue is that application deployment now depends on the data migration
+One issue is that application deployment now depends on the data migration
 to be completed. This may not be a problem with small databases but large
 databases with millions of records will respond with hanging or failed migrations.
 
 Another issue is that data migration files tend to stay in `db/migrate` for posterity.
 As a result, they will run whenever a developer sets up their local development environment.
-This is unnecessary for a pristine database. Especially when there are [scripts][2] to
+This is unnecessary for a pristine database. Especially with [scripts][seed-scripts] to
 seed the correct data.
 
-The purpose of `monarch_migrate` is to solve the above issues by separating data from schema migrations.
+The purpose of `monarch_migrate` is to solve the above issues and to:
 
-It is assumed that:
+- Provide a [uniform process](#suggested-workflow) for modifying data in the database.
+- Separate data migrations from schema migrations.
+- Allow automated testing of data migrations.
 
-- You run data migrations *only* on production and rely on seed [scripts][2] i.e. `dev:prime` for local development.
+It assumes that:
+
+- You run data migrations only on production and rely on seed [scripts][seed-scripts] for local development.
 - You run data migrations manually.
-- You want to test your data migrations in a thorough and automated manner.
+- You want to test data migrations in a thorough and automated manner.
 
 
 
 ## Install
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 Add the gem to your Gemfile:
 
@@ -50,45 +76,45 @@ After you install the gem, you need to run the generator:
 rails generate monarch_migrate:install
 ```
 
-The install generator creates a migration file that adds a `data_migration_records`
-table. It is where the gem keeps track of data migrations we have already ran.
+The install generator creates a schema migration file that adds a `data_migration_records`
+table. It is where the gem keeps track of data migrations we have ran.
+
+Run the schema migration to create the table:
+
+```shell
+rails db:migrate
+```
 
 
 
 ## Usage
+<sup>[(Back to top)](#table-of-contents)</sup>
 
-Data migrations have a similar structure to regular migrations in Rails. Files are
-put into `db/data_migrate` and follow the same naming pattern.
+Data migrations have a similar structure to regular migrations in Rails.
+Files follow the same naming pattern but reside in `db/data_migrate`.
 
-Let's start with an example.
 
-Suppose we have designed a system where users have first and last names. Time passes and
-it becomes clear this is [wrong][3]. Now, we want to put things right and come
-up with the following plan:
-
-1. Add a `name` column to `users` table to hold person's full name.
-2. Adapt the `User` model and use a data migration to update existing records.
-3. Drop `first_name` and `last_name` columns.
-
-To create the data migration to update existing user records, run:
+### Create a Data Migration
 
 ```shell
 rails generate data_migration backfill_users_name
 ```
 
-In contrast to regular migrations, there is no need to inherit any classes:
+Edit the newly created file to define the data migration:
 
 ```ruby
 # db/data_migrate/20220605083010_backfill_users_name.rb
 ActiveRecord::Base.connection.execute(<<-SQL)
   UPDATE users SET name = concat(first_name, ' ', last_name) WHERE name IS NULL;
 SQL
-
-SearchIndex::RebuildJob.perform_later
 ```
 
-As seen above, it is plain ruby code where you can refer to any object you
-need. Each data migration runs in a separate transaction.
+In contrast to regular migrations, there is no need to inherit any classes. It is plain
+ruby code where you can refer to any object you need. If the database adapter supports
+transactions, each data migration will automatically be wrapped in a separate transaction.
+
+
+### Running Data Migrations
 
 To run pending data migrations:
 
@@ -96,19 +122,35 @@ To run pending data migrations:
 rails data:migrate
 ```
 
-Or a specific version:
+To run a specific version:
 
 ```shell
 rails data:migrate VERSION=20220605083010
 ```
 
 
+### Display Status of Data Migrations
+
+You can see the status of data migrations with:
+
+```shell
+rails data:migrate:status
+```
+
+
+### Reverting Data Migrations
+
+Rollback functionality is not provided by design. Create another data migration instead.
+
+
+
 ## Testing
+<sup>[(Back to top)](#table-of-contents)</sup>
 
-Testing data migrations can be the difference between simply rerunning
-the migration and having to recover from a data loss.
+Testing data migrations can be the difference between rerunning
+the migration and having to recover from a data loss. This is
+why `monarch_migrate` includes test helpers for both RSpec and TestUnit.
 
-This is why `monarch_migrate` includes test helpers for both RSpec and TestUnit.
 
 ### RSpec
 
@@ -202,21 +244,30 @@ class BackfillUsersNameTest < MonarchMigrate::TestCase
 end
 ```
 
-Data migrations become obsolete, once the data manipulation successfully completes.
-So are the corresponding tests. These will fail after database columns are dropped
-e.g. `first_name` and `last_name`.
+In certain cases, it makes sense to also test with manually running the data migration
+against a production clone of the database.
 
-One solution is to use the following development workflow:
 
-1. Implement the data migration using TDD.
+
+## Suggested Workflow
+<sup>[(Back to top)](#table-of-contents)</sup>
+
+Data migrations become obsolete, once the data manipulation successfully completes. The same applies for the corresponding tests.
+
+The suggested development workflow is:
+
+1. Implement the data migration. Use TDD, if appropriate.
 1. Commit, push and wait for CI to pass.
 1. Request review from peers.
 1. Once approved, remove the test files in a consecutive commit and push again.
 1. Merge into trunk.
 
-This will also keep the test files in repo's history for posterity.
+This will keep the test files in repo's history for posterity.
+
+
 
 ## Known Issues and Limitations
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 The following issues and limitations are not necessary inherent to `monarch_migrate`.
 Some are innate to migrations in general.
@@ -235,7 +286,7 @@ Typically, data migrations relate closely to business models. In an ideal Rails 
 data manipulations would depend on model logic to enforce validation, conform to
 business rules, etc. Hence, it is very tempting to use ActiveRecord models in migrations.
 
-Here is a regular Rails migration for our example:
+Here a regular Rails migration:
 
 ```ruby
 # db/migrate/20220605083010_backfill_users_name.rb
@@ -268,10 +319,10 @@ end
 Unfortunately, with regular Rails migrations we will still face issue 4.
 
 To avoid it, we need to separate data from schema migrations and not run data
-migrations locally. With seed [scripts][2], there is no need to run them anyway.
+migrations locally. With seed [scripts][seed-scripts], there is no need to run them anyway.
 
 Keep the above in mind when referencing ActiveRecord models in data migrations. Ideally,
-limit their use and do as much processing as possible in Postgres.
+limit their use and do as much processing as possible in the database.
 
 
 ### Long-running Tasks in Migrations
@@ -280,11 +331,36 @@ As mentioned, each data migration runs in a separate transaction.
 A long-running task within a migration keeps the transaction open for
 the duration of the task. As a result, the migration may hang or fail.
 
-To avoid this, run such tasks asynchronously.
+On the other side, you may want to run such tasks asynchronously:
+
+```ruby
+# db/data_migrate/20220605083010_backfill_users_name.rb
+
+# Migration code
+
+SearchIndex::RebuildJob.perform_later
+```
+
+However, the task may start before the transaction commits. This is a [known issue][sync-issue].
+In addition, the database may suffer from longer commit times.
+
+A naive workaround is to introduce a delay:
+
+```ruby
+# db/data_migrate/20220605083010_backfill_users_name.rb
+
+# Migration code
+
+SearchIndex::RebuildJob.set(wait: 5.minutes).perform_later
+```
+
+The pragmatic approach is to run such tasks manually after the data migration is complete.
+In a future version `monarch_migrate` will provide a better alternative.
 
 
 
 ## Trivia
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 One of the most impressive migrations on Earth is the multi-generational
 round trip of the monarch butterfly.
@@ -304,13 +380,8 @@ Genetically speaking, this is an incredible data migration!
 
 
 
-## See Also
-
-Alternative gems
-
-- https://github.com/OffgridElectric/rails-data-migrations
-- https://github.com/ilyakatz/data-migrate
-- https://github.com/jasonfb/nonschema_migrations
+## Acknowledgments
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 Articles
 
@@ -320,11 +391,22 @@ Articles
 - [Ruby on Rails Model Patterns and Anti-patterns](https://blog.appsignal.com/2020/11/18/rails-model-patterns-and-anti-patterns.html)
 - [Rails Migrations with Zero Downtime](https://www.cloudbees.com/blog/rails-migrations-zero-downtime)
 
+Alternative gems
+
+- https://github.com/OffgridElectric/rails-data-migrations
+- https://github.com/ilyakatz/data-migrate
+- https://github.com/jasonfb/nonschema_migrations
+
 
 
 ## License
+<sup>[(Back to top)](#table-of-contents)</sup>
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
-[2]: https://thoughtbot.com/blog/priming-the-pump
-[3]: https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
+[ci-image]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml/badge.svg
+[ci]: https://github.com/lunohodov/monarch/actions/workflows/ci.yml
+[seed-scripts]: https://thoughtbot.com/blog/priming-the-pump
+[sync-issue]: https://github.com/mperham/sidekiq/wiki/FAQ#why-am-i-seeing-a-lot-of-cant-find-modelname-with-id12345-errors-with-sidekiq
+[version-image]: https://badge.fury.io/rb/monarch_migrate.svg
+[version]: https://badge.fury.io/rb/monarch_migrate
