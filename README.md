@@ -17,6 +17,7 @@ A library for Rails developers who are not willing to leave data migrations to c
   - [RSpec](#rspec)
   - [TestUnit](#testunit)
 - [Suggested Workflow](#suggested-workflow)
+- [Known Issues and Limitations](#known-issues-and-limitations)
 - [Trivia](#trivia)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
