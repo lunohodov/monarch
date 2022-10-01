@@ -39,6 +39,7 @@ module MonarchMigrate
 
       assert_match %r{Running data migration #{@migration.version}: #{@migration.name}}, out
       assert_match %r{Migration complete}, out
+      assert_match %r{after_commit}, out
     end
 
     test "rollbacks on failure" do
@@ -54,6 +55,7 @@ module MonarchMigrate
 
       assert_match %r{Migration failed due to}, out
       assert_match %r{some_non_existing_function}, out
+      assert_no_match %r{after_commit}, out
     end
   end
 end
