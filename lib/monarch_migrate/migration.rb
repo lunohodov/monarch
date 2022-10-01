@@ -32,7 +32,7 @@ module MonarchMigrate
           puts "Migration complete"
         rescue => e
           puts "Migration failed due to #{e}"
-          raise ActiveRecord::Rollback
+          raise
         end
 
         puts

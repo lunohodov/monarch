@@ -46,7 +46,9 @@ module MonarchMigrate
         File.expand_path("../fixtures/db/data_migrate/200010101010_bad_migration.rb", __dir__)
       )
 
-      out = capture(:stdout) { bad_migration.run }
+      out = capture(:stdout) do
+        assert_raises(ActiveRecord::StatementInvalid) { bad_migration.run }
+      end
 
       refute_migration_did_run(bad_migration.version)
 
