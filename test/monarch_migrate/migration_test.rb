@@ -2,17 +2,6 @@ require "test_helper"
 
 module MonarchMigrate
   class MigrationTest < ActiveSupport::TestCase
-    class GoodMigration
-      def self.migrate!
-      end
-    end
-
-    class BadMigration
-      def self.migrate!
-        raise "Error from migration"
-      end
-    end
-
     include ActiveSupport::Testing::Stream
     include Testing::Assertions
 
@@ -62,7 +51,7 @@ module MonarchMigrate
       refute_migration_did_run(bad_migration.version)
 
       assert_match %r{Migration failed due to}, out
-      assert_match %r{Error from migration}, out
+      assert_match %r{some_non_existing_function}, out
     end
   end
 end

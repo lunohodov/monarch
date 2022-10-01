@@ -1,3 +1,3 @@
-require "monarch_migrate/migration_test"
-
-MonarchMigrate::MigrationTest::GoodMigration.migrate!
+ActiveRecord::Base.connection.execute(<<-SQL)
+  SELECT current_timestamp;
+SQL

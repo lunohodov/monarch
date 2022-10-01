@@ -1,3 +1,3 @@
-require "monarch_migrate/migration_test"
-
-MonarchMigrate::MigrationTest::BadMigration.migrate!
+ActiveRecord::Base.connection.execute(<<-SQL)
+  SELECT some_non_existing_function;
+SQL
