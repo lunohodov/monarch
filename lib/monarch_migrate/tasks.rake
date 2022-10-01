@@ -3,7 +3,7 @@ require "monarch_migrate"
 namespace :data do
   desc "Run pending data migrations, or a single version specified by environment variable VERSION"
   task migrate: :environment do
-    MonarchMigrate.migrator.run($stdout)
+    MonarchMigrate.migrator.run
   end
 
   namespace :migrate do

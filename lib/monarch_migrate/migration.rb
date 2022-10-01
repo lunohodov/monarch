@@ -22,22 +22,20 @@ module MonarchMigrate
       !MigrationRecord.exists?(version: version)
     end
 
-    def run(io = nil)
-      io ||= File.open(File::NULL, "w")
-
+    def run
       ActiveRecord::Base.connection.transaction do
-        io.puts "Running data migration #{version}: #{name}"
+        puts "Running data migration #{version}: #{name}"
 
         begin
           instance_eval File.read(path), path
           MigrationRecord.create!(version: version)
-          io.puts "Migration complete"
+          puts "Migration complete"
         rescue => e
-          io.puts "Migration failed due to #{e}"
+          puts "Migration failed due to #{e}"
           raise ActiveRecord::Rollback
         end
 
-        io.puts
+        puts
       end
     end
 

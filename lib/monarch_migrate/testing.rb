@@ -1,11 +1,13 @@
 require "active_support/core_ext/string"
-require "stringio"
+require "active_support/testing/stream"
 
 module MonarchMigrate
   module Testing
     MigrationRunError = Class.new(RuntimeError)
 
     module Helpers
+      include ::ActiveSupport::Testing::Stream
+
       def data_migration
         @data_migration ||=
           begin
@@ -17,9 +19,8 @@ module MonarchMigrate
       end
 
       def run_data_migration
-        output = StringIO.new
-        data_migration.run(output)
-        output.string.tap { ensure_no_error(_1) }
+        output = capture(:stdout) { data_migration.run }
+        ensure_no_error(output)
       end
 
       protected
