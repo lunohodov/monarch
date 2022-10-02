@@ -4,6 +4,7 @@ module MonarchMigrate
   class Migration
     def initialize(path)
       @path = path.to_s
+      @after_commit_callback = nil
     end
 
     def filename
@@ -22,27 +23,34 @@ module MonarchMigrate
       !MigrationRecord.exists?(version: version)
     end
 
-    def run(io = nil)
-      io ||= File.open(File::NULL, "w")
+    def after_commit(&block)
+      @after_commit_callback = block
+    end
 
+    def run
       ActiveRecord::Base.connection.transaction do
-        io.puts "Running data migration #{version}: #{name}"
+        puts "Running data migration #{version}: #{name}"
 
         begin
           instance_eval File.read(path), path
           MigrationRecord.create!(version: version)
-          io.puts "Migration complete"
+          puts "Migration complete"
         rescue => e
-          io.puts "Migration failed due to #{e}"
-          raise ActiveRecord::Rollback
+          puts "Migration failed due to #{e}"
+          # Deliberately raising ActiveRecord::Rollback does not
+          # pass on the exception and the callback will be triggered
+          raise
         end
 
-        io.puts
+        puts
       end
+
+      after_commit_callback&.call
     end
 
     private
 
     attr_reader :path
+    attr_reader :after_commit_callback
   end
 end

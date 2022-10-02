@@ -13,10 +13,12 @@ A library for Rails developers who are not willing to leave data migrations to c
   - [Running Data Migrations](#running-data-migrations)
   - [Display Status of Data Migrations](#display-status-of-data-migrations)
   - [Reverting Data Migrations](#reverting-data-migrations)
+  - [Background Tasks in Data Migrations](#background-tasks-in-data-migrations)
 - [Testing](#testing)
   - [RSpec](#rspec)
   - [TestUnit](#testunit)
 - [Suggested Workflow](#suggested-workflow)
+- [Known Issues and Limitations](#known-issues-and-limitations)
 - [Trivia](#trivia)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
@@ -137,11 +139,28 @@ You can see the status of data migrations with:
 rails data:migrate:status
 ```
 
-
 ### Reverting Data Migrations
 
 Rollback functionality is not provided by design. Create another data migration instead.
 
+
+### Background Tasks in Data Migrations
+
+After the data manipulation is complete, you may want to trigger a long running task.
+Yet, there are [some pitfalls](#long-running-tasks-in-migrations) to be aware of.
+
+To avoid them, use an after-commit callback:
+
+```ruby
+# db/data_migrate/20220605083010_backfill_users_name.rb
+ActiveRecord::Base.connection.execute(<<-SQL)
+  UPDATE users SET name = concat(first_name, ' ', last_name) WHERE name IS NULL;
+SQL
+
+after_commit do
+  SearchIndex::RebuildJob.perform_later
+end
+```
 
 
 ## Testing
@@ -331,31 +350,11 @@ As mentioned, each data migration runs in a separate transaction.
 A long-running task within a migration keeps the transaction open for
 the duration of the task. As a result, the migration may hang or fail.
 
-On the other side, you may want to run such tasks asynchronously:
+You could run such tasks asynchronously (i.e. in a background job) but the task may start
+before the transaction commits. This is a [known issue][sync-issue]. In addition,
+a database under load can suffer from longer commit times.
 
-```ruby
-# db/data_migrate/20220605083010_backfill_users_name.rb
-
-# Migration code
-
-SearchIndex::RebuildJob.perform_later
-```
-
-However, the task may start before the transaction commits. This is a [known issue][sync-issue].
-In addition, the database may suffer from longer commit times.
-
-A naive workaround is to introduce a delay:
-
-```ruby
-# db/data_migrate/20220605083010_backfill_users_name.rb
-
-# Migration code
-
-SearchIndex::RebuildJob.set(wait: 5.minutes).perform_later
-```
-
-The pragmatic approach is to run such tasks manually after the data migration is complete.
-In a future version `monarch_migrate` will provide a better alternative.
+See [Background Tasks in Data Migrations](#background-tasks-in-data-migrations).
 
 
 

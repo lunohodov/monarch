@@ -2,17 +2,7 @@ require "test_helper"
 
 module MonarchMigrate
   class MigrationTest < ActiveSupport::TestCase
-    class GoodMigration
-      def self.migrate!
-      end
-    end
-
-    class BadMigration
-      def self.migrate!
-        raise "Error from migration"
-      end
-    end
-
+    include ActiveSupport::Testing::Stream
     include Testing::Assertions
 
     setup do
@@ -43,28 +33,29 @@ module MonarchMigrate
     end
 
     test "runs successfully" do
-      out = StringIO.new
-
-      @migration.run(out)
+      out = capture(:stdout) { @migration.run }
 
       assert_migration_did_run(@migration.version)
 
-      assert_match %r{Running data migration #{@migration.version}: #{@migration.name}}, out.string
-      assert_match %r{Migration complete}, out.string
+      assert_match %r{Running data migration #{@migration.version}: #{@migration.name}}, out
+      assert_match %r{Migration complete}, out
+      assert_match %r{after_commit}, out
     end
 
     test "rollbacks on failure" do
-      out = StringIO.new
       bad_migration = Migration.new(
         File.expand_path("../fixtures/db/data_migrate/200010101010_bad_migration.rb", __dir__)
       )
 
-      bad_migration.run(out)
+      out = capture(:stdout) do
+        assert_raises(ActiveRecord::StatementInvalid) { bad_migration.run }
+      end
 
       refute_migration_did_run(bad_migration.version)
 
-      assert_match %r{Migration failed due to}, out.string
-      assert_match %r{Error from migration}, out.string
+      assert_match %r{Migration failed due to}, out
+      assert_match %r{some_non_existing_function}, out
+      assert_no_match %r{after_commit}, out
     end
   end
 end

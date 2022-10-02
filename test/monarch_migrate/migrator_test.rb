@@ -2,6 +2,7 @@ require "test_helper"
 
 module MonarchMigrate
   class MigratorTest < ActiveSupport::TestCase
+    include ActiveSupport::Testing::Stream
     include Testing::Assertions
 
     setup do
@@ -23,24 +24,24 @@ module MonarchMigrate
 
     test "runs pending migrations" do
       MigrationRecord.create!(version: "200010101010")
-      out = StringIO.new
 
-      result = @migrator.run(out)
+      result = nil
+      out = capture(:stdout) { result = @migrator.run }
 
       assert_equal %w[200010101011], result.map(&:version)
-      assert_match %r{Running 1 data migrations}, out.string
+      assert_match %r{Running 1 data migrations}, out
 
       assert_migration_did_run("200010101011")
     end
 
     test "runs only the specified migration" do
       migrator = create_migrator(version: "200010101011")
-      out = StringIO.new
 
-      result = migrator.run(out)
+      result = nil
+      out = capture(:stdout) { result = migrator.run }
 
       assert_equal %w[200010101011], result.map(&:version)
-      assert_match %r{Running 1 data migrations}, out.string
+      assert_match %r{Running 1 data migrations}, out
 
       refute_migration_did_run("200010101010")
       assert_migration_did_run("200010101011")
@@ -55,11 +56,10 @@ module MonarchMigrate
     test "does not run migration twice" do
       MigrationRecord.create!(version: "200010101010")
       migrator = create_migrator(version: "200010101010")
-      out = StringIO.new
 
-      migrator.run(out)
+      out = capture(:stdout) { migrator.run }
 
-      assert_match %r{No data migrations pending}, out.string
+      assert_match %r{No data migrations pending}, out
     end
 
     test "migrations status is empty when there are no migrations" do
