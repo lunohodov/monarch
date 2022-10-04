@@ -13,7 +13,7 @@ A library for Rails developers who are not willing to leave data migrations to c
   - [Running Data Migrations](#running-data-migrations)
   - [Display Status of Data Migrations](#display-status-of-data-migrations)
   - [Reverting Data Migrations](#reverting-data-migrations)
-  - [Background Tasks in Data Migrations](#background-tasks-in-data-migrations)
+  - [Tasks in Data Migrations](#tasks-in-data-migrations)
 - [Testing](#testing)
   - [RSpec](#rspec)
   - [TestUnit](#testunit)
@@ -144,7 +144,7 @@ rails data:migrate:status
 Rollback functionality is not provided by design. Create another data migration instead.
 
 
-### Background Tasks in Data Migrations
+### Tasks in Data Migrations
 
 After the data manipulation is complete, you may want to trigger a long running task.
 Yet, there are [some pitfalls](#long-running-tasks-in-migrations) to be aware of.
@@ -354,7 +354,7 @@ You could run such tasks asynchronously (i.e. in a background job) but the task 
 before the transaction commits. This is a [known issue][sync-issue]. In addition,
 a database under load can suffer from longer commit times.
 
-See [Background Tasks in Data Migrations](#background-tasks-in-data-migrations).
+See [Tasks in Data Migrations](#tasks-in-data-migrations).
 
 
 
