@@ -309,10 +309,16 @@ Here a regular Rails migration:
 
 ```ruby
 # db/migrate/20220605083010_backfill_users_name.rb
-def up
-  User.all.each do |user|
-    user.name = "#{user.first_name} #{user.last_name}"
-    user.save
+class BackfillUsersName < ActiveRecord::Migration[7.0]
+  def up
+    User.all.each do |user|
+      user.name = "#{user.first_name} #{user.last_name}"
+      user.save
+    end
+  end
+
+  def down
+    # ...
   end
 end
 ```
@@ -328,9 +334,15 @@ To avoid issues 1-3, we can rewrite the migration to:
 
 ```ruby
 # db/migrate/20220605083010_backfill_users_name.rb
-def up
-  User.where(name: nil).find_each do |user|
-    user.update_column(:name, "#{user.first_name} #{user.last_name}")
+class BackfillUsersName < ActiveRecord::Migration[7.0]
+  def up
+    User.where(name: nil).find_each do |user|
+      user.update_column(:name, "#{user.first_name} #{user.last_name}")
+    end
+  end
+
+  def down
+    # ...
   end
 end
 ```
