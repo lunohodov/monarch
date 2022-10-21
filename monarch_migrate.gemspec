@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Yanko Ivanov"]
   spec.email = ["yanko.ivanov@gmail.com"]
 
-  spec.summary = "Sensible data migrations for Rails"
+  spec.summary = "A library for Rails developers who are not willing to leave data migrations to chance."
   spec.homepage = "https://github.com/lunohodov/monarch"
   spec.license = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.7.3")
