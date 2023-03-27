@@ -9,6 +9,9 @@ gem "rake"
 gem "rspec-rails"
 gem "sqlite3"
 gem "standard"
-gem "rails", "~> 5.2"
+gem "rails", "~> 6.0"
+gem "net-smtp", require: false
+gem "net-imap", require: false
+gem "net-pop", require: false
 
 gemspec name: "monarch_migrate", path: "../"
