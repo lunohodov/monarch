@@ -1,7 +1,3 @@
-appraise "rails_5.2" do
-  gem "rails", "~> 5.2"
-end
-
 appraise "rails_6.1" do
   gem "rails", "~> 6.1"
   gem "net-smtp", require: false
