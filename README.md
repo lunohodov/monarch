@@ -397,6 +397,7 @@ Genetically speaking, this is an incredible data migration!
 Articles
 
 - [Data Migrations in Rails](https://thoughtbot.com/blog/data-migrations-in-rails)
+- [Decoupling database migrations from server startup: why and how](https://pythonspeed.com/articles/schema-migrations-server-startup/)
 - [Zero downtime migrations: 500 million rows](https://www.honeybadger.io/blog/zero-downtime-migrations-of-large-databases-using-rails-postgres-and-redis/)
 - [Three Useful Data Migration Patterns for Rails](https://www.ombulabs.com/blog/rails/data-migrations/three-useful-data-migrations-patterns-in-rails.html)
 - [Ruby on Rails Model Patterns and Anti-patterns](https://blog.appsignal.com/2020/11/18/rails-model-patterns-and-anti-patterns.html)
