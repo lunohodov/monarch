@@ -2,6 +2,16 @@
 
 module MonarchMigrate
   class Migration
+    module Lookup
+      def migration_lookup_at(dirname)
+        Dir.glob("#{dirname}/[0-9]*_*.rb")
+      end
+
+      def migration_exists?(dirname, file_name)
+        migration_lookup_at(dirname).grep(/\d+_#{file_name}.rb$/).first
+      end
+    end
+
     def initialize(path)
       @path = path.to_s
       @after_commit_callback = nil
@@ -12,7 +22,7 @@ module MonarchMigrate
     end
 
     def name
-      File.basename(path, ".rb").match(/^[0-9]+_(.*)$/)[1].humanize
+      File.basename(path, ".rb").delete_prefix("#{version}_").humanize
     end
 
     def version

@@ -73,6 +73,7 @@ fabric.properties
 
 # Migration generated during tests
 /test/generators/**/tmp
+/test/fixtures/tmp
 
 # Ignore gem compile directory
 /pkg
