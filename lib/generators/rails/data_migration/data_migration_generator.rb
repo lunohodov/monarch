@@ -1,3 +1,5 @@
+require "rails/generators"
+require "rails/generators/migration"
 require "rails/generators/active_record"
 
 module Rails
@@ -5,14 +7,20 @@ module Rails
     class DataMigrationGenerator < Rails::Generators::NamedBase
       include ActiveRecord::Generators::Migration
 
-      source_root File.expand_path("../templates", __FILE__)
+      source_root File.expand_path("templates", __dir__)
+
+      def self.next_migration_number(_)
+        ActiveRecord::Generators::Base.next_migration_number(
+          MonarchMigrate.data_migrations_path
+        )
+      end
 
       def create_data_migration
         validate_file_name!
 
         migration_template(
           "data_migration.rb.erb",
-          File.join(MonarchMigrate.data_migrations_path, "#{file_name}.rb")
+          File.join(MonarchMigrate.migrator.path, "#{file_name}.rb")
         )
       end
 

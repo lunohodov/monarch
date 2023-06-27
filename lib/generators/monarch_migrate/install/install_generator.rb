@@ -6,7 +6,7 @@ module MonarchMigrate
     class InstallGenerator < Rails::Generators::Base
       include Rails::Generators::Migration
 
-      source_root File.expand_path("../templates", __FILE__)
+      source_root File.expand_path("templates", __dir__)
 
       def self.next_migration_number(dir)
         ActiveRecord::Generators::Base.next_migration_number(dir)
