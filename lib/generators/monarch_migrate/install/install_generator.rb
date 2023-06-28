@@ -23,12 +23,14 @@ module MonarchMigrate
         )
       end
 
-      def migration_version
-        "[#{ActiveRecord::Migration.current_version}]"
-      end
+      no_commands do
+        def migration_version
+          "[#{ActiveRecord::Migration.current_version}]"
+        end
 
-      def migration_table_name
-        MigrationRecord.table_name
+        def migration_table_name
+          MigrationRecord.table_name
+        end
       end
 
       private
