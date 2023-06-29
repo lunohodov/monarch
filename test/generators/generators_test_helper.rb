@@ -17,4 +17,17 @@ module GeneratorsTestHelper
       end
     end
   end
+
+  def with_schema_migrations_path(migrations_path)
+    original_configurations = ActiveRecord::Base.configurations
+    ActiveRecord::Base.configurations = {
+      test: {
+        database: "db/primary.sqlite3",
+        migrations_paths: migrations_path
+      }
+    }
+    yield
+  ensure
+    ActiveRecord::Base.configurations = original_configurations
+  end
 end
