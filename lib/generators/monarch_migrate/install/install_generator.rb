@@ -1,16 +1,14 @@
 require "rails/generators"
-require "rails/generators/active_record"
+require "rails/generators/active_record/migration"
 
 module MonarchMigrate
   module Generators
     class InstallGenerator < Rails::Generators::Base
-      include Rails::Generators::Migration
+      include ActiveRecord::Generators::Migration
+
+      class_option :database, type: :string, aliases: %i[--db], desc: "The database for your migration. By default, the current environment's primary database is used."
 
       source_root File.expand_path("templates", __dir__)
-
-      def self.next_migration_number(dir)
-        ActiveRecord::Generators::Base.next_migration_number(dir)
-      end
 
       def create_monarch_migrate_migration
         return if migration_exists?
@@ -18,7 +16,7 @@ module MonarchMigrate
 
         migration_template(
           "create_data_migration_records.rb.erb",
-          "db/migrate/create_data_migration_records.rb",
+          "#{db_migrate_path}/create_data_migration_records.rb",
           migration_version: migration_version
         )
       end

@@ -23,6 +23,16 @@ module MonarchMigrate
 
         assert_no_migration "db/migrate/create_data_migration_records.rb"
       end
+
+      test "puts migration in configured path" do
+        with_schema_migrations_path("db/custom_migrate") do
+          ActiveRecord::Base.connection.stub(:data_source_exists?, false) do
+            run_generator %w[--database=primary]
+          end
+
+          assert_migration "db/custom_migrate/create_data_migration_records.rb"
+        end
+      end
     end
   end
 end
