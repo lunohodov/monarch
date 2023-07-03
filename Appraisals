@@ -1,13 +1,6 @@
-# We test against only supported Rails versions.
-# https://guides.rubyonrails.org/maintenance_policy.html
-
-# Rails 6.0.Z is included in the list of supported series until June 1st 2023.
-appraise "rails_6.0" do
-  gem "rails", "~> 6.0"
-  gem "net-smtp", require: false
-  gem "net-imap", require: false
-  gem "net-pop", require: false
-end
+# Support Rails release series that receive patches and new versions
+# in case of a security issue.
+# See https://guides.rubyonrails.org/maintenance_policy.html#security-issues
 
 appraise "rails_6.1" do
   gem "rails", "~> 6.1"
