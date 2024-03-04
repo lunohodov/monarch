@@ -38,7 +38,9 @@ jobs:
           bundler-cache: true
 
       - name: "Reset app database"
-        run: bundle exec rake fake:db:reset
+        run: |
+          bundle exec rake fake:db:reset
+          bundle exec rake fake:db:test:prepare
 
       - name: "Run tests without acceptance"
         run: |
