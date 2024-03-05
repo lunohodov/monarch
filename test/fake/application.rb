@@ -28,10 +28,6 @@ module Fake
     config.paths.add "config/routes.rb", with: "#{APP_ROOT}/config/routes.rb"
     config.secret_key_base = "SECRET_KEY_BASE"
 
-    if Rails::VERSION::MAJOR > 6
-      config.active_record.legacy_connection_handling = false
-    end
-
     if config.active_record.sqlite3.respond_to?(:represent_boolean_as_integer)
       if Rails::VERSION::MAJOR < 6
         config.active_record.sqlite3.represent_boolean_as_integer = true
