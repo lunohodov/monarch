@@ -16,6 +16,7 @@ module MonarchMigrate
 end
 
 require "rails"
+require "active_record/railtie"
 require "monarch_migrate/migration"
 require "monarch_migrate/migration_record"
 require "monarch_migrate/migrator"
